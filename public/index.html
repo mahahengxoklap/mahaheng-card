@@ -111,7 +111,7 @@
         <button onclick="playWithDealer()" style="background: #eab308; font-size: 16px; padding: 12px 20px;">🎮 ຫຼິ້ນປ໋ອກຊ໋ອດກັບເຈົ້າມື</button>
         <button onclick="createRoom()" style="background: #3b82f6; color: white;">👥 ສ້າງຫ້ອງຊວນໝູ່ (ຫັກ 5%)</button>
 
-        <!-- ⚙️ [ເພີ່ມໃໝ່] ສ່ວນເລືອກກົດລະບຽບຕอนສ້າງຫ້ອງ -->
+        <!-- ⚙️ ສ່ວນເລືອກກົດລະບຽບຕອນສ້າງຫ້ອງ -->
         <div style="margin-top: 15px; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #047857; text-align: left;">
             <h4 style="margin: 0 0 8px 0; color: #facc15; text-align: center;">⚙️ ສ້າງຫ້ອງຊວນໝູ່ (ເລືອກກົດລະບຽບໄດ້)</h4>
             <div style="font-size: 13px; margin-bottom: 10px; background: #1e293b; padding: 8px; border-radius: 6px;">
@@ -209,7 +209,11 @@
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        const socket = io();
+        // 🛠️ ປັບປຸງການເຊື່ອມຕໍ່ Socket.io ໃຫ້ຮອງຮັບ Render Cloud ຢ່າງສະຖຽນ
+        const socket = io(window.location.origin, {
+            transports: ['websocket', 'polling']
+        });
+
         let myUsername = '';
         let currentRoomId = '';
 
@@ -390,7 +394,6 @@
             socket.emit('play_with_dealer', { amount: amount });
         }
 
-        // ⚙️ [ເພີ່ມໃໝ່] ຟັງຊັນສົ່ງຄ່າກົດລະບຽບຕອນສ້າງຫ້ອງ Custom Room
         function createCustomRoom() {
             let rules = {
                 aaBonus: document.getElementById('ruleAA').checked,
