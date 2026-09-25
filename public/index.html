@@ -186,7 +186,7 @@
         </div>
     </div>
 
-    <!-- 💸 Modal ถອນเงิน -->
+    <!-- 💸 Modal ถอนเงิน -->
     <div id="withdrawModal" class="modal">
         <div class="modal-content">
             <h3>💸 ແຈ້ງຖອນເງິນອັດຕະໂນມັດ</h3>
@@ -209,7 +209,9 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io(window.location.origin, {
-            transports: ['polling', 'websocket']
+            transports: ['polling', 'websocket'],
+            upgrade: true,
+            rememberUpgrade: true
         });
 
         let myUsername = '';
