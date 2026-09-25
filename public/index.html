@@ -1,18 +1,223 @@
-<script src="/socket.io/socket.io.js"></script>
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mahaheng Card - ແມ່ສົ້ມພາເຮັງ</title>
+    <style>
+        body { font-family: sans-serif; background: #064e3b; color: white; text-align: center; margin: 0; padding: 20px; }
+        .table-container { background: #065f46; border: 8px solid #047857; border-radius: 15px; max-width: 520px; margin: 20px auto; padding: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative; }
+        .credit-box { background: #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 18px; color: #facc15; font-weight: bold; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4); }
+        
+        .card { 
+            display: inline-block; width: 55px; height: 80px; background: white; color: black; border-radius: 6px; margin: 5px; line-height: 80px; font-size: 18px; font-weight: bold; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+
+        .pok9-glow {
+            animation: glowPulse 0.8s infinite alternate;
+            border: 2px solid #facc15;
+        }
+        @keyframes glowPulse {
+            from { box-shadow: 0 0 5px #facc15, 0 0 10px #facc15; }
+            to { box-shadow: 0 0 20px #facc15, 0 0 30px #eab308; }
+        }
+
+        .red { color: red; }
+        
+        button { 
+            background: #eab308; color: black; border: none; padding: 10px 18px; font-size: 15px; font-weight: bold; border-radius: 8px; cursor: pointer; margin: 6px;
+            transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        button:hover { background: #ca8a04; transform: translateY(-2px); box-shadow: 0 6px 10px rgba(0,0,0,0.3); }
+        button:active { transform: translateY(1px); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        button:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+
+        input { padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #047857; text-align: center; width: 90%; margin-bottom: 10px; background: #0f172a; color: white; }
+        
+        .chip-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 12px 0; }
+        .chip-btn { 
+            width: 65px; height: 65px; border-radius: 50%; color: white; border: 3px dashed #fff; font-size: 11px; font-weight: bold; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+            transition: all 0.2s ease; text-align: center; padding: 5px;
+        }
+        .chip-btn:hover { transform: scale(1.1); box-shadow: 0 6px 12px rgba(0,0,0,0.5); }
+        .chip-btn:active { transform: scale(0.95); }
+
+        .chip-1k { background: radial-gradient(circle, #64748b 60%, #334155 100%); }
+        .chip-2k { background: radial-gradient(circle, #ef4444 60%, #b91c1c 100%); }
+        .chip-5k { background: radial-gradient(circle, #22c55e 60%, #15803d 100%); }
+        .chip-10k { background: radial-gradient(circle, #eab308 60%, #a16207 100%); color: black; border-color: #000; }
+        .chip-20k { background: radial-gradient(circle, #a855f7 60%, #7e22ce 100%); }
+        .chip-50k { background: radial-gradient(circle, #ec4899 60%, #be185d 100%); }
+        .chip-100k { background: radial-gradient(circle, #06b6d4 60%, #0e7490 100%); }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: #1e293b; padding: 25px; border-radius: 12px; width: 340px; text-align: center; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 2px solid #047857; }
+        
+        #pok9Modal .modal-content {
+            background: linear-gradient(135deg, #1e293b 0%, #064e3b 100%);
+            border: 4px solid #facc15;
+            animation: popUpAnim 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popUpAnim {
+            0% { transform: scale(0.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .chat-box { background: #1e293b; max-width: 520px; margin: 20px auto; border-radius: 10px; padding: 10px; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .chat-messages { height: 120px; overflow-y: scroll; border: 1px solid #334155; padding: 8px; margin-bottom: 10px; font-size: 14px; border-radius: 6px; background: #0f172a; }
+        .player-card-tag { background: #0f172a; padding: 8px; border-radius: 6px; margin: 5px 0; font-size: 14px; text-align: left; border: 1px solid #334155; }
+        .logout-btn { background: #ef4444; color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; float: right; }
+        .logout-btn:hover { background: #dc2626; }
+    </style>
+</head>
+<body>
+    <h1>🃏 Mahaheng Card</h1>
+    
+    <!-- ໜ້າປ້ອນຊື່ User -->
+    <div class="table-container" id="loginBox">
+        <h3>👤 ປ້ອນຊື່ User ຂອງທ່ານເພື່ອເຂົ້າຫຼິ້ນ</h3>
+        <input type="text" id="usernameInput" placeholder="ຕົວຢ່າງ: 12345 ຫຼື ຊື່ຂອງທ່ານ">
+        <br>
+        <button onclick="loginUser()" style="background: #22c55e; color: white; width: 100%;">ເຂົ້າສູ່ໂຕະ</button>
+    </div>
+
+    <!-- ໜ້າຫຼິ້ນເກມ -->
+    <div class="table-container" id="gameBox" style="display:none;">
+        <div class="credit-box">
+            <button class="logout-btn" onclick="logoutUser()">🚪 ອອກຈາກລະບົບ</button>
+            👤 User: <span id="displayName" style="color: #38bdf8;"></span><br>
+            💳 ເຄດິດ: <span id="userCredit">0 ກີບ</span>
+            <br>
+            <div style="margin-top: 8px; display: flex; justify-content: center; gap: 5px;">
+                <button onclick="openDepositModal()" style="background: #22c55e; color: white; padding: 5px 10px; font-size: 12px; margin:0;">+ ຝາກເງິນ</button>
+                <button onclick="openWithdrawModal()" style="background: #ef4444; color: white; padding: 5px 10px; font-size: 12px; margin:0;">- ถອນເງິນ</button>
+            </div>
+        </div>
+
+        <h3>💰 ວາງເງິນເດີມພັນ (ຊິບຄາຊີໂນ)</h3>
+        <input type="text" id="betInput" value="1,000" oninput="formatNumberInput(this)" placeholder="ກະລຸນາໃສ່ຈຳນວນເງິນ..." style="width: 180px; font-weight: bold; font-size: 18px; color: #facc15;">
+        
+        <div class="chip-container">
+            <button class="chip-btn chip-1k" onclick="setBet(1000)">1,000</button>
+            <button class="chip-btn chip-2k" onclick="setBet(2000)">2,000</button>
+            <button class="chip-btn chip-5k" onclick="setBet(5000)">5,000</button>
+            <button class="chip-btn chip-10k" onclick="setBet(10000)">10,000</button>
+            <button class="chip-btn chip-20k" onclick="setBet(20000)">20,000</button>
+            <button class="chip-btn chip-50k" onclick="setBet(50000)">50,000</button>
+            <button class="chip-btn chip-100k" onclick="setBet(100000)">100,000</button>
+        </div>
+        <br>
+        <button onclick="playWithDealer()" style="background: #eab308; font-size: 16px; padding: 12px 20px;">🎮 ຫຼິ້ນປ໋ອກຊ໋ອດກັບເຈົ້າມື</button>
+
+        <!-- ⚙️ ສ່ວນເລືອກກົດລະບຽບຕອນສ້າງຫ້ອງ -->
+        <div style="margin-top: 15px; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #047857; text-align: left;">
+            <h4 style="margin: 0 0 8px 0; color: #facc15; text-align: center;">⚙️ ສ້າງຫ້ອງຊວນໝູ່ (ເລືອກກົດລະບຽບໄດ້)</h4>
+            <div style="font-size: 13px; margin-bottom: 10px; background: #1e293b; padding: 8px; border-radius: 6px;">
+                <label style="display: block; margin-bottom: 5px; cursor: pointer;">
+                    <input type="checkbox" id="ruleAA"> 🃏 <b>ໄພ້ AA (ຄູ່ A)</b> ໃຫຍ່ກ່ອນໝູ່ ກິນ x5 (ແຕ່ແພ້ປ໋ອກ 8-9)
+                </label>
+                <label style="display: block; cursor: pointer;">
+                    <input type="checkbox" id="ruleDeng"> 🎨 <b>ໄພ້ເດັ້ງ (ສີດຽວກັນ)</b> ຖ້າຊະນະ ໄດ້ x2
+                </label>
+            </div>
+            <button onclick="createCustomRoom()" style="background: #3b82f6; color: white; width: 100%;">👥 ສ້າງຫ້ອງຕາມກົດທີ່ເລືອກ</button>
+        </div>
+
+        <div style="margin-top: 10px;">
+            <input type="text" id="joinRoomInput" placeholder="ໃສ່ລະຫັດຫ້ອງ..." style="width: 120px; padding: 8px;">
+            <button onclick="joinRoom()" style="background: #0284c7; color: white;">ເຂົ້າຫ້ອງ</button>
+        </div>
+
+        <div id="roomInfo" style="display:none; margin-top: 15px; background: #047857; padding: 10px; border-radius: 8px;">
+            <p style="margin:5px 0;">🔗 ລະຫັດຫ້ອງ: <b id="roomIdText" style="color: #facc15; font-size: 20px;"></b></p>
+            <button onclick="copyRoomLink()" style="background: #38bdf8; color: black; font-size: 13px; padding: 5px 10px;">📋 ກັອບປີ້ລິ້ງສົ່ງໃຫ້ໝູ່</button>
+            <div style="margin-top: 10px; text-align: left;">
+                <p style="margin: 0 0 5px 0; font-size: 14px;">👥 ສະມາຊິກໃນໂຕະ (Real-time):</p>
+                <div id="playerList"></div>
+            </div>
+        </div>
+
+        <div id="resultBox" style="display:none; margin-top: 20px; border-top: 2px dashed #047857; padding-top: 15px;">
+            <h3>📊 ຜົນການແຂ່ງຂັນປ໋ອກຊ໋ອດ</h3>
+            <p><b>ໄພ້ເຈົ້າມື:</b> <span id="dealerCards"></span> (<span id="dealerScoreText" style="display:none;">ແຕ້ມ: <span id="dealerScore"></span></span>)</p>
+            <p><b>ໄພ້ຂອງເຈົ້າ:</b> <span id="playerCards"></span> (<span id="playerScoreText" style="display:none;">ແຕ້ມ: <span id="playerScore"></span></span>)</p>
+            <h2 id="gameResultText" style="color: #facc15;"></h2>
+            <p id="payoutArea" style="display:none;">ຜົນໄດ້ເສຍ: <span id="payoutText"></span></p>
+            
+            <button onclick="playWithDealer()" style="background: #22c55e; color: white; width: 100%; margin-top: 10px; font-size: 16px; padding: 12px;">🔄 ຫຼິ້ນຕາອີກຮອບ (ເດີມພັນເທົ່າເກົ່າ)</button>
+        </div>
+    </div>
+
+    <!-- 🎉 Popup ສະຫຼອງຕອນຊະນະ / ປ໋ອກ 9 -->
+    <div id="pok9Modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: #facc15; margin-top: 0; font-size: 26px;">🎉 ໂອ້ໂຫເຢี่ยมຍອດ!</h2>
+            <p style="font-size: 20px; color: #38bdf8; font-weight: bold;" id="pok9TitleText">✨ ຍິນດີນຳທ່ານໄດ້ຊະນະ! ✨</p>
+            <div style="font-size: 40px; margin: 15px 0;">🎆 💰 🏆 💰 🎆</div>
+            <p id="pok9WinText" style="font-size: 18px; color: #22c55e; font-weight: bold;"></p>
+            <button onclick="closePok9Modal()" style="background: #22c55e; color: white; width: 100%; margin-top: 15px; font-size: 16px; padding: 12px;">ຮັບໂຊກເລີຍ!</button>
+        </div>
+    </div>
+
+    <!-- 📱 Modal ຝາກເງິນ -->
+    <div id="depositModal" class="modal">
+        <div class="modal-content">
+            <h3>📱 ສະແກນ QR ໂອນເງິນ AI Auto</h3>
+            <div style="background: white; padding: 10px; display: inline-block; margin: 10px 0;">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=BCEL-123456789" alt="QR Code">
+            </div>
+            <p style="font-size: 13px;">ຊື່ບັນຊີ: ແມ່ສົ້ມພາເຮັງ (BCEL)</p>
+            
+            <input type="text" id="depositAmount" placeholder="ຈຳນວນເງິນທີ່ໂອນ (ເຊັ່ນ: 35,000)" oninput="formatNumberInput(this)">
+            
+            <p style="font-size: 13px; text-align: left; margin: 5px 0;">📷 ແນບຮູບສະລິບ (AI ຈະດຶງເລກ Ref ໃຫ້ອັດຕະໂນມັດ):</p>
+            <input type="file" id="slipFile" accept="image/*" style="background: #1e293b; color: white; padding: 5px;">
+            
+            <p id="statusMsg" style="font-size: 13px; color: #38bdf8; margin-top: 5px;"></p>
+
+            <button onclick="submitDepositAuto()" style="background: #22c55e; color: white; width: 100%; margin-top: 10px;">🚀 ຢືນຍັນເຕີມເງິນ Auto</button>
+            
+            <a id="whatsappDepositBtn" href="#" target="_blank" style="display: none; background: #25d366; color: white; padding: 10px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 8px; text-align: center; font-size: 14px;">
+                💬 AI ອ່ານບໍ່ຜ່ານ? ຄລິກສົ່ງ WhatsApp ຫາແອັດມິນ
+            </a>
+
+            <button onclick="closeDepositModal()" style="background: #ef4444; color: white; width: 100%; margin-top: 5px;">ປິດ</button>
+        </div>
+    </div>
+
+    <!-- 💸 Modal ถອນเงิน -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <h3>💸 ແຈ້ງຖອນເງິນອັດຕະໂນມັດ</h3>
+            <input type="text" id="withdrawAmount" placeholder="ຈຳນວນເງິນທີ່ຕ້ອງການຖອນ..." oninput="formatNumberInput(this)">
+            <p style="font-size: 12px; color: #94a3b8; text-align: left; margin: 5px 0;">* ເມື່ອກົດແຈ້ງຖອນ ລະບົບຈະບັນທຶກສະຖິຕິ ແລະ ເປີດ WhatsApp ສົນທະນາກັບແອັດມິນທັນທີ.</p>
+            
+            <button id="withdrawBtn" onclick="submitWithdraw()" style="background: #22c55e; color: white; width: 100%; margin-top: 10px;">📤 ຢືນຍັນແຈ້ງຖອນຜ່ານ WhatsApp</button>
+            <button onclick="closeWithdrawModal()" style="background: #ef4444; color: white; width: 100%; margin-top: 5px;">ປິດ</button>
+        </div>
+    </div>
+
+    <!-- ລະບົບແຊັດ Real-time -->
+    <div class="chat-box" id="chatBoxContainer" style="display:none;">
+        <h4>💬 ສົນທະນາໃນວົງ (Real-time)</h4>
+        <div class="chat-messages" id="chatMessages"></div>
+        <input type="text" id="chatInput" placeholder="ພິມຂໍ້ຄວາມ..." style="width: 70%; margin-bottom: 0;">
+        <button onclick="sendMessage()" style="padding: 10px; font-size: 14px;">ສົ່ງ</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script>
-        // 🛠️ ປັບປຸງການເຊື່ອມຕໍ່ Socket.io ໃຫ້ຮອງຮັບ Render Cloud ຢ່າງສະຖຽນ
         const socket = io(window.location.origin, {
-            transports: ['websocket', 'polling']
+            transports: ['polling', 'websocket']
         });
 
         let myUsername = '';
         let currentRoomId = '';
 
-        // 🔍 ตรวจสอบ Room ID จาก URL ลิงก์ที่เพื่อนส่งมา
         const urlParams = new URLSearchParams(window.location.search);
         const autoRoomId = urlParams.get('room');
 
-        // 💾 ถ้ามี room ในลิงก์ ให้เก็บบันทึกไว้ใน sessionStorage ทันที
         if (autoRoomId) {
             sessionStorage.setItem('mahaheng_pending_room', autoRoomId);
         }
@@ -57,15 +262,13 @@
             document.getElementById('gameBox').style.display = 'block';
             document.getElementById('chatBoxContainer').style.display = 'block';
 
-            // 🚀 ตรวจสอบว่ามีห้องที่ค้างอยู่จากลิงก์หรือไม่ (ทั้งจาก autoRoomId หรือ sessionStorage)
             let targetRoom = autoRoomId || sessionStorage.getItem('mahaheng_pending_room');
             if (targetRoom) {
                 document.getElementById('joinRoomInput').value = targetRoom;
-                // หน่วงเวลาเล็กน้อยเพื่อให้ Socket เชื่อมต่อเสร็จสมบูรณ์ก่อนเข้าห้อง
                 setTimeout(() => {
                     socket.emit('join_custom_room', { roomId: targetRoom });
-                    sessionStorage.removeItem('mahaheng_pending_room'); // ล้างค่าทิ้งหลังเข้าห้องแล้ว
-                }, 500);
+                    sessionStorage.removeItem('mahaheng_pending_room');
+                }, 800);
             }
         }
 
@@ -113,11 +316,6 @@
 
             reader.onload = function (e) {
                 let slipBase64 = e.target.result;
-                
-                localStorage.setItem('pending_slip_image', slipBase64);
-                localStorage.setItem('pending_username', myUsername);
-                localStorage.setItem('pending_amount', amount);
-
                 socket.emit('request_deposit_auto', { 
                     username: myUsername, 
                     amount: amount,
@@ -158,7 +356,7 @@
 
             let btn = document.getElementById('withdrawBtn');
             btn.disabled = true;
-            btn.innerText = "⏳ กำลังส่งข้อมูล...";
+            btn.innerText = "⏳ ກຳລັງສົ່ງຂໍ້ມູນ...";
 
             let adminPhone = "8562091445369";
             let message = encodeURIComponent(`💰 ແຈ້ງຖອນເງິນຈາກລູກຄ້າ:\n` +
@@ -206,7 +404,6 @@
             socket.emit('create_custom_room', { rules: rules });
         }
 
-        function createRoom() { socket.emit('create_room'); }
         function joinRoom() {
             let roomId = document.getElementById('joinRoomInput').value.trim();
             if (roomId) socket.emit('join_custom_room', { roomId: roomId });
@@ -331,3 +528,5 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         });
     </script>
+</body>
+</html>
