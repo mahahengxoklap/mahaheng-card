@@ -347,7 +347,6 @@ io.on('connection', (socket) => {
         socket.emit('update_balance', { balance: userWallets[username] });
     });
 
-    // 🌐 [ເພີ່ມໃໝ່] ລະບົບສ້າງຫ້ອງຊວນໝູ່ແບບເລືອກກົດລະບຽບ Custom Rules
     socket.on('create_custom_room', (data) => {
         let roomId = Math.random().toString(36).substring(2, 6).toUpperCase();
         let rules = data.rules || { aaBonus: false, dengBonus: false };
@@ -369,7 +368,6 @@ io.on('connection', (socket) => {
         });
     });
 
-    // 🚪 [ເພີ່ມໃໝ່] ລະບົບເຂົ້າຫ້ອງຊວນໝູ່ Custom Room
     socket.on('join_custom_room', (data) => {
         let roomId = data.roomId.toUpperCase();
         if (rooms[roomId]) {
@@ -526,7 +524,7 @@ io.on('connection', (socket) => {
     });
 });
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
